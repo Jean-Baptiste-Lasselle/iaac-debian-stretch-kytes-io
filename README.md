@@ -5,6 +5,190 @@ Pour l'organisation kytes.io, l'initialisation du cycle iaac sur debian stretch,
 
 Un repo qui documente la recette "pre-ssh", à appliquer sur un hôte Debian Stretch fournit par le niveau IAAS, avant d'exécuter des recettes de cuisine Kytes 
 
+# Problématique juste après installation : les repository de package manager
+
+## PB 1 à régler :  le repo référencé par le  "CD ROM"
+
+J'ai:
+* installé Debian Stretch à partir de ma clé USB bootable,
+* retiré la cleé USB bootale de son slot hardware
+* redémarré la machine, entrer dans le BIOS, dchanger l'ordre de Boot, pour qu'il se fasse sur le disque sélectionné pdt l'installation Debian, et re-démrrer pour entrer dans Debian
+* J'ai installé git, ça a fonctionné
+* J'ai configuré le backport debian stretch pour `apt` avec le petit script : 
+```
+export FICHIER_CONF=/etc/apt/sources.list.d/stretch-backports-repo.list
+export FICHIER_TEMP=$HOME/etc.apt.sources.list.d.stretch-backports-repo.list
+rm -f $FICHIER_TEMP
+touch $FICHIER_TEMP
+echo "deb http://ftp.debian.org/debian stretch-backports main" >> $FICHIER_TEMP
+# on créée, s'il n'existe pas, le répertoire dans lequel devra être placé le fichert de configuration $FICHIER_CONF
+sudo mkdir -p /etc/apt/sources.list.d/
+# on backup le precedent, 
+sudo cp -f $FICHIER_CONF "$FICHIER_CONF".previous
+# pour le remplacer par le nouveau
+sudo rm -f $FICHIER_CONF
+sudo cp -f $FICHIER_TEMP $FICHIER_CONF
+# Et on rétablit les droits de propriété légitimes du système
+sudo chmod a-r $FICHIER_CONF
+sudo chmod a-x $FICHIER_CONF
+sudo chmod a-w $FICHIER_CONF
+# pour moi, le système doit tolérer qu'un utilisateur consulte ce fichier en lecture seule.
+sudo chmod a+r $FICHIER_CONF
+sudo chmod o+w $FICHIER_CONF
+
+sudo chown root:root $FICHIER_CONF
+
+# puis installation virtualbox
+sudo apt-get install -y virtualbox
+```
+* et j'ai fait un `apt-get update -y`. J'en arrvie alors à ma première remarquie, à savoir que j'ai des indications dans la sortie standard d'APT, qui indiquent qu'un problème est survenu avec un repository, celui référencé comme étant le local de la clé USB, en fait. Et il y a une indication expliqunt que je devrais metttre en oeuvre mon propre repository APT, , etc... Je vuex fai re le lien avec le kickstart clairement, pour remplacer automatiquement, cette entrée de repository, par une entrée d'un repository que j'aurai provisionné en private. La stdout d'APT, dans cet état précis : 
+
+```
+Ign:1 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch InRelease
+Ign:2 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch Release
+Ign:3 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main all Packages
+Hit:4 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 Packages
+Ign:5 http://ftp.fr.debian.org/debian stretch InRelease                                             
+Hit:6 http://security.debian.org/debian-security stretch/updates InRelease                          
+Ign:4 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 Packages
+Ign:7 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en_US
+Hit:8 http://ftp.fr.debian.org/debian stretch-updates InRelease
+Hit:9 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en
+Ign:10 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main all DEP-11 Metadata
+Ign:9 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en                              
+Ign:11 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 DEP-11 Metadata                      
+Ign:12 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main DEP-11 64x64 Icons
+Ign:3 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main all Packages
+Hit:4 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 Packages
+Ign:7 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en_US
+Ign:4 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 Packages                        
+Ign:10 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main all DEP-11 Metadata                  
+Hit:9 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en
+Ign:11 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 DEP-11 Metadata
+Ign:9 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en
+Ign:12 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main DEP-11 64x64 Icons
+Ign:3 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main all Packages
+Ign:7 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en_US
+Hit:4 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 Packages
+Ign:10 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main all DEP-11 Metadata
+Ign:4 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 Packages
+Ign:11 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 DEP-11 Metadata
+Hit:9 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en
+Ign:12 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main DEP-11 64x64 Icons
+Ign:9 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en
+Ign:3 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main all Packages
+Ign:7 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en_US
+Ign:10 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main all DEP-11 Metadata
+Hit:4 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 Packages
+Ign:11 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 DEP-11 Metadata
+Ign:12 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main DEP-11 64x64 Icons
+Hit:9 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en
+Ign:3 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main all Packages
+Ign:7 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en_US
+Ign:10 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main all DEP-11 Metadata
+Ign:11 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 DEP-11 Metadata
+Hit:13 http://ftp.fr.debian.org/debian stretch Release                                                              
+Ign:12 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main DEP-11 64x64 Icons
+Ign:3 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main all Packages
+Ign:7 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main Translation-en_US
+Ign:10 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main all DEP-11 Metadata
+Ign:11 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main amd64 DEP-11 Metadata
+Ign:12 cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch/main DEP-11 64x64 Icons
+Get:14 http://ftp.debian.org/debian stretch-backports InRelease [91.8 kB]                                                        
+Get:16 http://ftp.fr.debian.org/debian stretch/main amd64 DEP-11 Metadata [3,066 kB]             
+Get:17 http://ftp.debian.org/debian stretch-backports/main amd64 Packages [397 kB]
+Get:18 http://ftp.debian.org/debian stretch-backports/main Translation-en [293 kB]
+Get:19 http://ftp.fr.debian.org/debian stretch/main DEP-11 64x64 Icons [6,804 kB]                            
+Fetched 10.7 MB in 1s (6,536 kB/s)                                     
+Reading package lists... Done
+W: The repository 'cdrom://[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25] stretch Release' does not have a Release file.
+N: Data from such a repository can't be authenticated and is therefore potentially dangerous to use.
+N: See apt-secure(8) manpage for repository creation and user configuration details.
+```
+## Contenu des fichiers de conf APT juste après conf package manager et install git 
+
+### pour le `/etc/apt/sources.list` 
+
+Avant tout changement de ma part (docn le généré par la procédure d'installation) :  
+```
+jibl@pc-alienware-jib:~$ cat /etc/apt/sources.list
+# 
+
+# deb cdrom:[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25]/ stretch main
+
+deb cdrom:[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25]/ stretch main
+
+deb http://ftp.fr.debian.org/debian/ stretch main
+deb-src http://ftp.fr.debian.org/debian/ stretch main
+
+deb http://security.debian.org/debian-security stretch/updates main
+deb-src http://security.debian.org/debian-security stretch/updates main
+
+# stretch-updates, previously known as 'volatile'
+deb http://ftp.fr.debian.org/debian/ stretch-updates main
+deb-src http://ftp.fr.debian.org/debian/ stretch-updates main
+
+```
+
+et j'ai commenté la ligne començant par `deb cdrom: etc...`  : 
+
+```
+jibl@pc-alienware-jib:~$ cat /etc/apt/sources.list
+# 
+
+# deb cdrom:[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25]/ stretch main
+
+# deb cdrom:[Debian GNU/Linux 9.5.0 _Stretch_ - Official amd64 xfce-CD Binary-1 20180714-10:25]/ stretch main
+
+deb http://ftp.fr.debian.org/debian/ stretch main
+deb-src http://ftp.fr.debian.org/debian/ stretch main
+
+deb http://security.debian.org/debian-security stretch/updates main
+deb-src http://security.debian.org/debian-security stretch/updates main
+
+# stretch-updates, previously known as 'volatile'
+deb http://ftp.fr.debian.org/debian/ stretch-updates main
+deb-src http://ftp.fr.debian.org/debian/ stretch-updates main
+
+```
+* Pour le `/etc/apt.conf.d/`
+
+
+de et juste après l'installation, j'ai, dans le fichier `/etc/apt/sources.list`
+
+
+# Dernière erreur install virutalbox / debian stretch
+
+
+```
+jibl@pc-alienware-jib:~$ sudo apt-get update -y && sudo apt-get install -y virtualbox
+Ign:1 http://ftp.fr.debian.org/debian stretch InRelease
+Hit:2 http://ftp.fr.debian.org/debian stretch-updates InRelease                                                              
+Hit:3 http://ftp.fr.debian.org/debian stretch Release                                                                                                   
+Hit:4 http://ftp.debian.org/debian stretch-backports InRelease                                                                                          
+Hit:5 http://security.debian.org/debian-security stretch/updates InRelease
+Reading package lists... Done
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+Package virtualbox is not available, but is referred to by another package.
+This may mean that the package is missing, has been obsoleted, or
+is only available from another source
+
+E: Package 'virtualbox' has no installation candidate
+jibl@pc-alienware-jib:~$ sudo apt-get update -y && sudo apt-get install -y virtual-box
+Ign:1 http://ftp.fr.debian.org/debian stretch InRelease
+Hit:2 http://security.debian.org/debian-security stretch/updates InRelease                                                                         
+Hit:3 http://ftp.fr.debian.org/debian stretch-updates InRelease                                                                                    
+Hit:4 http://ftp.fr.debian.org/debian stretch Release                                                                                                   
+Hit:5 http://ftp.debian.org/debian stretch-backports InRelease                                                                                          
+Reading package lists... Done                                                                    
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+E: Unable to locate package virtual-box
+
+```
 
 
 # Procédure complète de provision "pre-SSH"

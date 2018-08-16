@@ -247,8 +247,29 @@ wget https://www.virtualbox.org/download/oracle_vbox_2016.asc
 sudo apt-key add ./oracle_vbox_2016.asc
 
 
-# puis installation virtualbox
-sudo apt-get install -y virtualbox
+# - Puis installation virtualbox : 
+# 
+#                      sudo apt-get install -y virtualbox
+# 
+# - L'instruction précédente sort en fait un message d'erreur, qui indique 
+#   les package virtualbox rendus disponibles par Orcle, pour les utilsiateurs Debian Stretch :
+# 
+#   jibl@pc-alienware-jib:~$ sudo apt-get install -y virtualbox
+#   Reading package lists... Done
+#   Building dependency tree       
+#   Reading state information... Done
+#   Package virtualbox is a virtual package provided by:
+#     virtualbox-5.2 5.2.18-124319~Debian~stretch
+#     virtualbox-5.1 5.1.38-122592~Debian~stretch
+#     virtualbox-5.0 5.0.40-115130~Debian~stretch
+#   You should explicitly select one to install.
+#   
+#   E: Package 'virtualbox' has no installation candidate
+#   jibl@pc-alienware-jib:~$ 
+
+# - Je choisis donc la plus récente :
+sudo apt-get install -y virtualbox-5.2
+
 
 # - Virutal Box devrait maintenant être installé ! 
 

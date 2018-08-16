@@ -151,10 +151,15 @@ deb http://ftp.fr.debian.org/debian/ stretch-updates main
 deb-src http://ftp.fr.debian.org/debian/ stretch-updates main
 
 ```
-* Pour le `/etc/apt.conf.d/`
+* Pour le `/etc/apt/sources.conf.d/backports-debian.list`
 
 
 de et juste après l'installation, j'ai, dans le fichier `/etc/apt/sources.list`
+
+```
+à copier-coller
+```
+
 
 
 # Dernière erreur install virutalbox / debian stretch
@@ -188,8 +193,106 @@ Building dependency tree
 Reading state information... Done
 E: Unable to locate package virtual-box
 
+jibl@pc-alienware-jib:~$ sudo apt install virtualbox
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+Package virtualbox is not available, but is referred to by another package.
+This may mean that the package is missing, has been obsoleted, or
+is only available from another source
+
+E: Package 'virtualbox' has no installation candidate
+jibl@pc-alienware-jib:~$ 
+
+```
+DOnc, ce test montre que le repository de backports de debian, ne permet pas d'installer virtualbox, ou un package quelconque nommé `virutalbox`, au 16 Août 2018.
+
+J'essaie donc une méthode alternative d'installation de virtualbox indiquée par la [com officielle debian sur le sujet virutalbox](https://wiki.debian.org/VirtualBox) : 
+
+En utilisant le repo oracle virtualbox,  `deb http://download.virtualbox.org/virtualbox/debian stretch contrib`, exposé pour les utilisateurs Virtual Box travaillant sous Debian. 
+
+* Recette de configuration du repo Oracle VirtualBOx pour debian : 
+
+```
+deb http://download.virtualbox.org/virtualbox/debian stretch contrib
 ```
 
+
+```
+export FICHIER_CONF=/etc/apt/sources.list.d/oracle-vbox-debian-stretch-repo.list
+export FICHIER_TEMP=$HOME/etc.apt.sources.list.d.oracle-vbox-debian-stretch-repo.list
+rm -f $FICHIER_TEMP
+touch $FICHIER_TEMP
+echo "deb http://download.virtualbox.org/virtualbox/debian stretch contrib" >> $FICHIER_TEMP
+# on créée, s'il n'existe pas, le répertoire dans lequel devra être placé le fichert de configuration $FICHIER_CONF
+sudo mkdir -p /etc/apt/sources.list.d/
+# on backup le precedent, 
+sudo cp -f $FICHIER_CONF "$FICHIER_CONF".previous
+# pour le remplacer par le nouveau
+sudo rm -f $FICHIER_CONF
+sudo cp -f $FICHIER_TEMP $FICHIER_CONF
+# Et on rétablit les droits de propriété légitimes du système
+sudo chmod a-r $FICHIER_CONF
+sudo chmod a-x $FICHIER_CONF
+sudo chmod a-w $FICHIER_CONF
+# pour moi, le système doit tolérer qu'un utilisateur consulte ce fichier en lecture seule.
+sudo chmod a+r $FICHIER_CONF
+sudo chmod o+w $FICHIER_CONF
+
+sudo chown root:root $FICHIER_CONF
+# Configuration de la clé du répo Oracle  : 
+# - je choppe la clé
+wget https://www.virtualbox.org/download/oracle_vbox_2016.asc
+# - et aller
+sudo apt-key add ./oracle_vbox_2016.asc
+
+
+# puis installation virtualbox
+sudo apt-get install -y virtualbox
+
+# - Virutal Box devrait maintenant être installé ! 
+
+```
+
+
+
+
+
+Pour info, au 16 Août 2018, sur l'existence des clefs de sécurité du repo Oracle virtualbox DEbian stretch  : 
+
+
+```
+jibl@pc-alienware-jib:~$ wget https://www.virtualbox.org/download/oracle_vbox_2016.asc
+--2018-08-16 10:25:07--  https://www.virtualbox.org/download/oracle_vbox_2016.asc
+Resolving www.virtualbox.org (www.virtualbox.org)... 137.254.60.32
+Connecting to www.virtualbox.org (www.virtualbox.org)|137.254.60.32|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 3157 (3.1K) [text/plain]
+Saving to: ‘oracle_vbox_2016.asc’
+
+oracle_vbox_2016.asc                                 100%[=====================================================================================================================>]   3.08K  20.1KB/s    in 0.2s    
+
+2018-08-16 10:25:08 (20.1 KB/s) - ‘oracle_vbox_2016.asc’ saved [3157/3157]
+
+jibl@pc-alienware-jib:~$ ls -all https://www.virtualbox.org/download/
+ls: cannot access 'https://www.virtualbox.org/download/': No such file or directory
+jibl@pc-alienware-jib:~$ wget https://www.virtualbox.org/download/oracle_vbox_2018.asc
+--2018-08-16 10:25:39--  https://www.virtualbox.org/download/oracle_vbox_2018.asc
+Resolving www.virtualbox.org (www.virtualbox.org)... 137.254.60.32
+Connecting to www.virtualbox.org (www.virtualbox.org)|137.254.60.32|:443... connected.
+HTTP request sent, awaiting response... 404 Not Found
+2018-08-16 10:25:40 ERROR 404: Not Found.
+
+jibl@pc-alienware-jib:~$ wget https://www.virtualbox.org/download/oracle_vbox_2017.asc
+--2018-08-16 10:25:44--  https://www.virtualbox.org/download/oracle_vbox_2017.asc
+Resolving www.virtualbox.org (www.virtualbox.org)... 137.254.60.32
+Connecting to www.virtualbox.org (www.virtualbox.org)|137.254.60.32|:443... connected.
+HTTP request sent, awaiting response... 404 Not Found
+2018-08-16 10:25:45 ERROR 404: Not Found.
+
+jibl@pc-alienware-jib:~$ 
+
+```
 
 # Procédure complète de provision "pre-SSH"
 

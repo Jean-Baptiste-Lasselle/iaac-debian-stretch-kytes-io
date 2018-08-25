@@ -644,6 +644,12 @@ git config --global user.name "Jean-Baptiste-Lasselle"
 # Enfin, depuis Git 2.0 :
 git config --global push.default matching
 
+# - Enfin, pour la convénience à l'utilisation, on chosiit d'utilsier le cache keystore "built-in" de git
+# - pour ce faire, on ajoute une configuration s'appliquant à l'utilisateur linux courant
+# 
+echo "[credential]" >> $HOME/.gitconfig
+echo "    helper = cache  --timeout 30000" >> $HOME/.gitconfig
+
 # --- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 # --- PREMIER GIT CLONE DU REPO VIDE
 # --- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
@@ -655,7 +661,7 @@ export ES_CE_GITHUB=$(cat ./es-ce-github.kytes | grep github)
 if [ "x$ES_CE_GITHUB" = "x" ]
 then
     echo "[$NOM_DU_REPO_QUE_VOUS_AVEZ_CREE] : Il s'agit d'un repository dans un serveur Gitlab privé"
-	export URI_SSH_GIT_REMOTE=$URI_SSH_GIT_REMOTE_FOR_GITLAB 
+	export URI_ - Enfin, pour _GIT_REMOTE=$URI_SSH_GIT_REMOTE_FOR_GITLAB 
 else
     echo "[$NOM_DU_REPO_QUE_VOUS_AVEZ_CREE] : Il s'agit d'un repository https://github.com"
     export URI_SSH_GIT_REMOTE=$URI_SSH_GIT_REMOTE_FOR_GITHUB
